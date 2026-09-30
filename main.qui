@@ -1,0 +1,85 @@
+import math
+import native = "./native.qui"
+
+class Reader
+    private bin source
+    private int frame_width
+    private int frame_height
+    private float frame_rate
+    private int frame_count
+    private float stream_duration
+    private int frame_position
+
+    construct(
+        bin bytes,
+        int width,
+        int height,
+        float fps,
+        int frames,
+        float duration
+    )
+        source = bytes
+        frame_width = width
+        frame_height = height
+        frame_rate = fps
+        frame_count = frames
+        stream_duration = duration
+        frame_position = 0
+
+    int width()
+        return frame_width
+
+    int height()
+        return frame_height
+
+    float fps()
+        return frame_rate
+
+    int frames()
+        return frame_count
+
+    float duration()
+        return stream_duration
+
+    int position()
+        return frame_position
+
+    void | error seek(int frame)
+        if frame < 0
+            return error("video.Reader.seek frame cannot be negative")
+        if frame_count >= 0 and frame > frame_count
+            return error("video.Reader.seek frame is beyond end of stream")
+        frame_position = frame
+        return
+
+    tensor<T> | none | error read<T: numeric>(int channel = 3)
+        if channel != 1 and channel != 3 and channel != 4
+            return error("video.Reader.read channel must be 1, 3, or 4")
+        tensor<T> output = tensor.zeros<T>([
+            channel, frame_height, frame_width
+        ])
+        bin source_bytes = source
+        int32 status = native.decode<T>(
+            &source_bytes, frame_position, channel, &output
+        )
+        if status == int32(1)
+            return none
+        if status != int32(0)
+            return error("video.Reader.read failed to decode the requested frame")
+        frame_position += 1
+        return output
+
+Reader | error open(string path)
+    bin bytes = try file.read_bin(path)
+    tensor<float> metadata = tensor.zeros<float>([5])
+    int32 status = native.probe(&bytes, &metadata)
+    if status != int32(0)
+        return error("video.open failed to read video metadata")
+    int width = math.trunc(metadata[0].item())
+    int height = math.trunc(metadata[1].item())
+    float fps = metadata[2].item()
+    int frames = math.trunc(metadata[3].item())
+    float duration = metadata[4].item()
+    if width <= 0 or height <= 0
+        return error("video.open decoded invalid frame dimensions")
+    return Reader(bytes, width, height, fps, frames, duration)

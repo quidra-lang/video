@@ -1,0 +1,46 @@
+name: ci
+on:
+  push:
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          repository: quidra-lang/quidra
+          ref: develop
+          path: quidra
+      - uses: actions/checkout@v4
+        with:
+          repository: quidra-lang/math
+          ref: develop
+          path: math
+      - name: Expose Math as sibling package
+        run: ln -s "${GITHUB_WORKSPACE}/math" "$(dirname "$GITHUB_WORKSPACE")/math"
+      - name: Enforce synchronized first-party versions
+        run: |
+          python3 - <<'PY'
+          import tomllib
+          from pathlib import Path
+          versions = {
+              "video": tomllib.loads(Path("project.toml").read_text())["package"]["version"],
+              "quidra": tomllib.loads(Path("quidra/project.toml").read_text())["project"]["version"],
+              "math": tomllib.loads(Path("math/project.toml").read_text())["package"]["version"],
+          }
+          if len(set(versions.values())) != 1:
+              raise SystemExit(f"first-party versions must match: {versions}")
+          PY
+      - name: Enforce Core native ABI boundary
+        run: python3 quidra/tests/package_native_boundary_tests.py .
+      - name: Install Quidra toolchain dependencies
+        run: sudo apt-get update && sudo apt-get install -y clang llvm libcurl4-openssl-dev
+      - name: Install Video native dependencies
+        run: bash scripts/install-linux-native-deps.sh
+      - name: Build Quidra
+        run: cmake -S quidra -B quidra/build -DCMAKE_BUILD_TYPE=Release && cmake --build quidra/build --parallel
+      - name: Validate package metadata with Core
+        run: quidra/build/quidra package validate "$GITHUB_WORKSPACE"
+      - name: Integration
+        run: bash tests/integration.sh "$GITHUB_WORKSPACE/quidra/build/quidra"

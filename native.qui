@@ -1,0 +1,14 @@
+// Private package-owned FFmpeg bridge. Video bytes are borrowed from ordinary
+// Quidra bin values and decoded frames are written only through Core's opaque
+// tensor native-extension ABI.
+extern int32 probe(
+    const bin &source,
+    tensor<float> &metadata
+) = "video_native_probe"
+
+extern int32 decode<T: numeric>(
+    const bin &source,
+    int frame,
+    int channels,
+    tensor<T> &output
+) = "video_native_decode"
