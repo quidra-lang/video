@@ -3,7 +3,7 @@
 // tensor native-extension ABI.
 extern int32 probe(
     const bin &source,
-    tensor<float> &metadata
+    tensor<real64> &metadata
 ) = "video_native_probe"
 
 extern int32 decode<T: numeric>(

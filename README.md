@@ -15,7 +15,7 @@ boundary:
 import video
 
 video.Reader reader = video.open("clip.mp4")
-tensor<uint8> | none | error frame = reader.read<uint8>()
+tensor<nat8> | none | error frame = reader.read<nat8>()
 ```
 
 Use `channel = 1`, `3`, or `4` for gray, RGB, or RGBA. No CPU/GPU transfer

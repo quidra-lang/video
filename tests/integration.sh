@@ -23,9 +23,9 @@ int | error run()
     print(NL)
     print(reader.position())
     print(NL)
-    tensor<uint8> | none | error first = reader.read<uint8>()
+    tensor<nat8> | none | error first = reader.read<nat8>()
     match first
-        tensor<uint8> pixels
+        tensor<nat8> pixels
             print(pixels.shape()[0])
             print(NL)
             print(pixels.shape()[1])
@@ -43,9 +43,9 @@ int | error run()
     try reader.seek(0)
     print(reader.position())
     print(NL)
-    tensor<float32> | none | error gray = reader.read<float32>(channel = 1)
+    tensor<real32> | none | error gray = reader.read<real32>(channel = 1)
     match gray
-        tensor<float32> pixels
+        tensor<real32> pixels
             print(pixels.shape()[0])
             print(NL)
             print(pixels.shape()[1])
@@ -59,9 +59,9 @@ int | error run()
             print(problem)
             print(NL)
     qvideo.Reader copied = reader
-    tensor<uint8> | none | error copied_frame = copied.read<uint8>()
+    tensor<nat8> | none | error copied_frame = copied.read<nat8>()
     match copied_frame
-        tensor<uint8>
+        tensor<nat8>
             print(copied.position())
             print(NL)
         none
@@ -122,9 +122,9 @@ int | error run()
     try file.move("$ORIGINAL", "$TMP/opened.mp4")
     try file.move("$REPLACEMENT", "$ORIGINAL")
     qvideo.Reader copied = reader
-    tensor<uint8> | none | error frame = copied.read<uint8>()
+    tensor<nat8> | none | error frame = copied.read<nat8>()
     match frame
-        tensor<uint8> pixels
+        tensor<nat8> pixels
             print(pixels.shape()[1] == 6 and pixels.shape()[2] == 8)
             print(NL)
         none

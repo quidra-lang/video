@@ -5,18 +5,18 @@ class Reader
     private bin source
     private int frame_width
     private int frame_height
-    private float frame_rate
+    private real64 frame_rate
     private int frame_count
-    private float stream_duration
+    private real64 stream_duration
     private int frame_position
 
     construct(
         bin bytes,
         int width,
         int height,
-        float fps,
+        real64 fps,
         int frames,
-        float duration
+        real64 duration
     )
         source = bytes
         frame_width = width
@@ -32,13 +32,13 @@ class Reader
     int height()
         return frame_height
 
-    float fps()
+    real64 fps()
         return frame_rate
 
     int frames()
         return frame_count
 
-    float duration()
+    real64 duration()
         return stream_duration
 
     int position()
@@ -71,15 +71,15 @@ class Reader
 
 Reader | error open(string path)
     bin bytes = try file.read_bin(path)
-    tensor<float> metadata = tensor.zeros<float>([5])
+    tensor<real64> metadata = tensor.zeros<real64>([5])
     int32 status = native.probe(&bytes, &metadata)
     if status != int32(0)
         return error("video.open failed to read video metadata")
     int width = math.trunc(metadata[0].item())
     int height = math.trunc(metadata[1].item())
-    float fps = metadata[2].item()
+    real64 fps = metadata[2].item()
     int frames = math.trunc(metadata[3].item())
-    float duration = metadata[4].item()
+    real64 duration = metadata[4].item()
     if width <= 0 or height <= 0
         return error("video.open decoded invalid frame dimensions")
     return Reader(bytes, width, height, fps, frames, duration)
