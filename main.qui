@@ -59,8 +59,12 @@ class Reader
             try nat(channel), try nat(this.frame_height), try nat(this.frame_width)
         ])
         bin source_bytes = this.source
+        // Core's checked cast can return an error for a large bare int.
+        // Propagate it before crossing the fixed-width native ABI.
+        int64 decoded_frame = try int64(this.frame_position)
+        int64 decoded_channels = try int64(channel)
         int32 status = native.decode<T>(
-            &source_bytes, int64(this.frame_position), int64(channel), &output
+            &source_bytes, decoded_frame, decoded_channels, &output
         )
         if status == int32(1)
             return none
