@@ -46,17 +46,17 @@ class Reader
 
     void | error seek(int frame)
         if frame < 0
-            return error("video.Reader.seek frame cannot be negative")
+            return error("video.Reader.seek frame cannot be negative", code = "VIDEO_ARGUMENT")
         if this.frame_count >= 0 and frame > this.frame_count
-            return error("video.Reader.seek frame is beyond end of stream")
+            return error("video.Reader.seek frame is beyond end of stream", code = "VIDEO_ARGUMENT")
         this.frame_position = frame
         return
 
     tensor<T> | none | error read<T: numeric>(int channel = 3)
         if channel != 1 and channel != 3 and channel != 4
-            return error("video.Reader.read channel must be 1, 3, or 4")
+            return error("video.Reader.read channel must be 1, 3, or 4", code = "VIDEO_ARGUMENT")
         tensor<T> output = tensor.zeros<T>([
-            nat(channel), nat(this.frame_height), nat(this.frame_width)
+            try nat(channel), try nat(this.frame_height), try nat(this.frame_width)
         ])
         bin source_bytes = this.source
         int32 status = native.decode<T>(
@@ -65,7 +65,7 @@ class Reader
         if status == int32(1)
             return none
         if status != int32(0)
-            return error("video.Reader.read failed to decode the requested frame")
+            return error("video.Reader.read failed to decode the requested frame", code = "VIDEO_DECODE")
         this.frame_position += 1
         return output
 
@@ -74,12 +74,12 @@ Reader | error open(string path)
     tensor<real64> metadata = tensor.zeros<real64>([5])
     int32 status = native.probe(&bytes, &metadata)
     if status != int32(0)
-        return error("video.open failed to read video metadata")
-    int width = math.trunc(metadata[0].item())
-    int height = math.trunc(metadata[1].item())
+        return error("video.open failed to read video metadata", code = "VIDEO_DECODE")
+    int width = try math.trunc(metadata[0].item())
+    int height = try math.trunc(metadata[1].item())
     real64 fps = metadata[2].item()
-    int frames = math.trunc(metadata[3].item())
+    int frames = try math.trunc(metadata[3].item())
     real64 duration = metadata[4].item()
     if width <= 0 or height <= 0
-        return error("video.open decoded invalid frame dimensions")
+        return error("video.open decoded invalid frame dimensions", code = "VIDEO_SHAPE")
     return Reader(bytes, width, height, fps, frames, duration)

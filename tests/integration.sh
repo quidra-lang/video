@@ -145,4 +145,43 @@ match result
 QUI
 [[ "$(QUIDRA_PACKAGE_PATH="$PACKAGE_ROOT" "$QUIDRA" run "$TMP/identity.qui")" == "true" ]]
 
+# Verify stable package error codes independently of the message text.
+cat > "$TMP/video-errors.qui" <<QUI
+import qvideo = video
+
+int | error run()
+    qvideo.Reader reader = try qvideo.open("$VIDEO")
+    void | error negative = reader.seek(-1)
+    match negative
+        void
+            print(false)
+        error problem
+            print(problem.code == "VIDEO_ARGUMENT")
+    print(NL)
+    tensor<nat8> | none | error invalid_channels = reader.read<nat8>(channel = 2)
+    match invalid_channels
+        tensor<nat8>
+            print(false)
+        none
+            print(false)
+        error problem
+            print(problem.code == "VIDEO_ARGUMENT")
+    print(NL)
+    return 0
+
+auto | error result = run()
+match result
+    int
+        int ignored = result
+    error problem
+        print(problem)
+        print(NL)
+QUI
+
+error_output="$(QUIDRA_PACKAGE_PATH="$PACKAGE_ROOT" "$QUIDRA" run "$TMP/video-errors.qui")"
+[[ "$error_output" == "$(printf 'true\\ntrue')" ]] || {
+    printf 'video error code mismatch: %s\\n' "$error_output" >&2
+    exit 1
+}
+
 echo "video integration: ok"

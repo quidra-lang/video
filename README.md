@@ -31,6 +31,18 @@ policy, pixel conversion, future SIMD/GPU kernels, and future codec-specific
 optimizations. Core supplies only tensor/device/autograd/native-package
 substrate.
 
+## Errors
+
+Video error values carry stable package-specific codes, while an error
+raised by Core or Math and propagated with `try` retains its originating code.
+The diagnostic messages above are unchanged:
+
+| Code | Meaning | Typical cause |
+| --- | --- | --- |
+| `VIDEO_ARGUMENT` | Invalid caller argument | Negative or out-of-range seek, unsupported channel count |
+| `VIDEO_DECODE` | Encoded media could not be decoded or probed | Invalid container or corrupt frame |
+| `VIDEO_SHAPE` | Invalid decoded tensor dimensions | Non-positive frame width or height |
+
 ## Package metadata and release
 
 `project.toml` is the metadata source of truth. Use `quidra package sync .`
