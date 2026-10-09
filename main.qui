@@ -18,55 +18,55 @@ class Reader
         int frames,
         real64 duration
     )
-        source = bytes
-        frame_width = width
-        frame_height = height
-        frame_rate = fps
-        frame_count = frames
-        stream_duration = duration
-        frame_position = 0
+        this.source = bytes
+        this.frame_width = width
+        this.frame_height = height
+        this.frame_rate = fps
+        this.frame_count = frames
+        this.stream_duration = duration
+        this.frame_position = 0
 
     int width()
-        return frame_width
+        return this.frame_width
 
     int height()
-        return frame_height
+        return this.frame_height
 
     real64 fps()
-        return frame_rate
+        return this.frame_rate
 
     int frames()
-        return frame_count
+        return this.frame_count
 
     real64 duration()
-        return stream_duration
+        return this.stream_duration
 
     int position()
-        return frame_position
+        return this.frame_position
 
     void | error seek(int frame)
         if frame < 0
             return error("video.Reader.seek frame cannot be negative")
-        if frame_count >= 0 and frame > frame_count
+        if this.frame_count >= 0 and frame > this.frame_count
             return error("video.Reader.seek frame is beyond end of stream")
-        frame_position = frame
+        this.frame_position = frame
         return
 
     tensor<T> | none | error read<T: numeric>(int channel = 3)
         if channel != 1 and channel != 3 and channel != 4
             return error("video.Reader.read channel must be 1, 3, or 4")
         tensor<T> output = tensor.zeros<T>([
-            channel, frame_height, frame_width
+            nat(channel), nat(this.frame_height), nat(this.frame_width)
         ])
-        bin source_bytes = source
+        bin source_bytes = this.source
         int32 status = native.decode<T>(
-            &source_bytes, frame_position, channel, &output
+            &source_bytes, int64(this.frame_position), int64(channel), &output
         )
         if status == int32(1)
             return none
         if status != int32(0)
             return error("video.Reader.read failed to decode the requested frame")
-        frame_position += 1
+        this.frame_position += 1
         return output
 
 Reader | error open(string path)

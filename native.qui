@@ -8,7 +8,7 @@ extern int32 probe(
 
 extern int32 decode<T: numeric>(
     const bin &source,
-    int frame,
-    int channels,
+    int64 frame,
+    int64 channels,
     tensor<T> &output
 ) = "video_native_decode"
