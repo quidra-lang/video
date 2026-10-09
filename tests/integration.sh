@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PACKAGE_ROOT="$(dirname "$ROOT")"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+export QUIDRA_CACHE_DIR="$TMP/run-cache"
 
 command -v ffmpeg >/dev/null 2>&1 || { echo "ffmpeg CLI not available; skipping"; exit 0; }
 VIDEO="$TMP/input.mp4"
