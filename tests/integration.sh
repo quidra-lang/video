@@ -5,6 +5,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PACKAGE_ROOT="$(dirname "$ROOT")"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
+export QUIDRA_CACHE_DIR="$TMP/run-cache"
 
 command -v ffmpeg >/dev/null 2>&1 || { echo "ffmpeg CLI not available; skipping"; exit 0; }
 VIDEO="$TMP/input.mp4"
@@ -23,9 +24,9 @@ int | error run()
     print(NL)
     print(reader.position())
     print(NL)
-    tensor<uint8> | none | error first = reader.read<uint8>()
+    tensor<nat8> | none | error first = .reader.read<nat8>()
     match first
-        tensor<uint8> pixels
+        tensor<nat8> pixels
             print(pixels.shape()[0])
             print(NL)
             print(pixels.shape()[1])
@@ -40,12 +41,12 @@ int | error run()
             print(NL)
     print(reader.position())
     print(NL)
-    try reader.seek(0)
+    try .reader.seek(0)
     print(reader.position())
     print(NL)
-    tensor<float32> | none | error gray = reader.read<float32>(channel = 1)
+    tensor<real32> | none | error gray = .reader.read<real32>(channel = 1)
     match gray
-        tensor<float32> pixels
+        tensor<real32> pixels
             print(pixels.shape()[0])
             print(NL)
             print(pixels.shape()[1])
@@ -59,9 +60,9 @@ int | error run()
             print(problem)
             print(NL)
     qvideo.Reader copied = reader
-    tensor<uint8> | none | error copied_frame = copied.read<uint8>()
+    tensor<nat8> | none | error copied_frame = .copied.read<nat8>()
     match copied_frame
-        tensor<uint8>
+        tensor<nat8>
             print(copied.position())
             print(NL)
         none
@@ -122,9 +123,9 @@ int | error run()
     try file.move("$ORIGINAL", "$TMP/opened.mp4")
     try file.move("$REPLACEMENT", "$ORIGINAL")
     qvideo.Reader copied = reader
-    tensor<uint8> | none | error frame = copied.read<uint8>()
+    tensor<nat8> | none | error frame = .copied.read<nat8>()
     match frame
-        tensor<uint8> pixels
+        tensor<nat8> pixels
             print(pixels.shape()[1] == 6 and pixels.shape()[2] == 8)
             print(NL)
         none
@@ -143,5 +144,52 @@ match result
         print(NL)
 QUI
 [[ "$(QUIDRA_PACKAGE_PATH="$PACKAGE_ROOT" "$QUIDRA" run "$TMP/identity.qui")" == "true" ]]
+
+# Verify stable package error codes independently of the message text.
+cat > "$TMP/video-errors.qui" <<QUI
+import qvideo = video
+
+int | error run()
+    qvideo.Reader reader = try qvideo.open("$VIDEO")
+    void | error negative = .reader.seek(-1)
+    match negative
+        void
+            print(false)
+        error problem
+            print(problem.code == "VIDEO_ARGUMENT")
+    print(NL)
+    tensor<nat8> | none | error invalid_channels = .reader.read<nat8>(channel = 2)
+    match invalid_channels
+        tensor<nat8>
+            print(false)
+        none
+            print(false)
+        error problem
+            print(problem.code == "VIDEO_ARGUMENT")
+    print(NL)
+    qvideo.Reader | error unreadable = qvideo.open("$TMP/not-a-video.mp4")
+    match unreadable
+        qvideo.Reader
+            print(false)
+        error problem
+            print(problem.code == "VIDEO_DECODE")
+    print(NL)
+    return 0
+
+auto | error result = run()
+match result
+    int
+        int ignored = result
+    error problem
+        print(problem)
+        print(NL)
+QUI
+
+printf 'not a video\n' > "$TMP/not-a-video.mp4"
+error_output="$(QUIDRA_PACKAGE_PATH="$PACKAGE_ROOT" "$QUIDRA" run "$TMP/video-errors.qui")"
+[[ "$error_output" == "$(printf 'true\ntrue\ntrue')" ]] || {
+    printf 'video error code mismatch: %s\n' "$error_output" >&2
+    exit 1
+}
 
 echo "video integration: ok"

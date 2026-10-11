@@ -39,7 +39,7 @@ jobs:
       - name: Install Video native dependencies
         run: bash scripts/install-linux-native-deps.sh
       - name: Build Quidra
-        run: cmake -S quidra -B quidra/build -DCMAKE_BUILD_TYPE=Release && cmake --build quidra/build --parallel
+        run: cmake -S quidra -B quidra/build -DCMAKE_BUILD_TYPE=Release && cmake --build quidra/build --parallel ${{ runner.os == 'macOS' && 3 || 4 }}
       - name: Validate package metadata with Core
         run: quidra/build/quidra package validate "$GITHUB_WORKSPACE"
       - name: Integration
