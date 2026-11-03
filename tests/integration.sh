@@ -17,11 +17,11 @@ cat > "$TMP/test.qui" <<QUI
 import qvideo = video
 
 int | error run()
-    qvideo.Reader reader = try qvideo.open("$VIDEO")
+    qvideo.Reader reader := try qvideo.open("$VIDEO")
     print.line(reader.width())
     print.line(reader.height())
     print.line(reader.position())
-    tensor<nat8> | none | error first = .reader.read<nat8>()
+    tensor<nat8> | none | error first := .reader.read<nat8>()
     match first
         tensor<nat8> pixels
             print.line(pixels.shape()[0])
@@ -34,7 +34,7 @@ int | error run()
     print.line(reader.position())
     try .reader.seek(0)
     print.line(reader.position())
-    tensor<real32> | none | error gray = .reader.read<real32>(channel = 1)
+    tensor<real32> | none | error gray := .reader.read<real32>(channel = 1)
     match gray
         tensor<real32> pixels
             print.line(pixels.shape()[0])
@@ -44,8 +44,8 @@ int | error run()
             print.line("unexpected-eof")
         error problem
             print.line(problem)
-    qvideo.Reader copied = reader
-    tensor<nat8> | none | error copied_frame = .copied.read<nat8>()
+    qvideo.Reader copied := reader
+    tensor<nat8> | none | error copied_frame := .copied.read<nat8>()
     match copied_frame
         tensor<nat8>
             print.line(copied.position())
@@ -56,10 +56,10 @@ int | error run()
     print.line(reader.position())
     return 0
 
-auto | error result = run()
+int | error result := run()
 match result
     int
-        int ignored = result
+        int ignored := result
     error problem
         print.line(problem)
 QUI
@@ -99,11 +99,11 @@ ffmpeg -loglevel error -y \
 cat > "$TMP/identity.qui" <<QUI
 import qvideo = video
 int | error run()
-    qvideo.Reader reader = try qvideo.open("$ORIGINAL")
+    qvideo.Reader reader := try qvideo.open("$ORIGINAL")
     try file.move("$ORIGINAL", "$TMP/opened.mp4")
     try file.move("$REPLACEMENT", "$ORIGINAL")
-    qvideo.Reader copied = reader
-    tensor<nat8> | none | error frame = .copied.read<nat8>()
+    qvideo.Reader copied := reader
+    tensor<nat8> | none | error frame := .copied.read<nat8>()
     match frame
         tensor<nat8> pixels
             print.line(pixels.shape()[1] == 6 and pixels.shape()[2] == 8)
@@ -112,10 +112,10 @@ int | error run()
         error
             print.line(false)
     return 0
-auto | error result = run()
+int | error result := run()
 match result
     int
-        int ignored = result
+        int ignored := result
     error problem
         print.line(problem)
 QUI
@@ -126,15 +126,15 @@ cat > "$TMP/video-errors.qui" <<QUI
 import qvideo = video
 
 int | error run()
-    qvideo.Reader reader = try qvideo.open("$VIDEO")
-    void | error negative = .reader.seek(-1)
+    qvideo.Reader reader := try qvideo.open("$VIDEO")
+    void | error negative := .reader.seek(-1)
     match negative
         void
             print(false)
         error problem
             print(problem.code == "VIDEO_ARGUMENT")
     print.line()
-    tensor<nat8> | none | error invalid_channels = .reader.read<nat8>(channel = 2)
+    tensor<nat8> | none | error invalid_channels := .reader.read<nat8>(channel = 2)
     match invalid_channels
         tensor<nat8>
             print(false)
@@ -143,7 +143,7 @@ int | error run()
         error problem
             print(problem.code == "VIDEO_ARGUMENT")
     print.line()
-    qvideo.Reader | error unreadable = qvideo.open("$TMP/not-a-video.mp4")
+    qvideo.Reader | error unreadable := qvideo.open("$TMP/not-a-video.mp4")
     match unreadable
         qvideo.Reader
             print(false)
@@ -152,10 +152,10 @@ int | error run()
     print.line()
     return 0
 
-auto | error result = run()
+int | error result := run()
 match result
     int
-        int ignored = result
+        int ignored := result
     error problem
         print.line(problem)
 QUI
