@@ -14,7 +14,7 @@ boundary:
 ```quidra
 import video
 
-video.Reader reader := video.open("clip.mp4")
+reader := video.open("clip.mp4")
 tensor<nat8> | none | error frame := .reader.read<nat8>()
 ```
 

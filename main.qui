@@ -47,11 +47,11 @@ class Reader(local bin bytes, local int width, local int height, local real64 fp
     tensor<T> | none | error .read<T: numeric>(int channel := 3)
         if channel != 1 and channel != 3 and channel != 4
             return error("video.Reader.read channel must be 1, 3, or 4", code = "VIDEO_ARGUMENT")
-        tensor<T> output := tensor.zeros<T>([
+        output := tensor.zeros<T>([
             nat(channel), nat(frame_height), nat(frame_width)
         ])
-        bin source_bytes := source
-        int32 status := native.decode<T>(
+        source_bytes := source
+        status := native.decode<T>(
             source_bytes, int64(frame_position), int64(channel), &output
         )
         if status == int32(1)
@@ -62,16 +62,16 @@ class Reader(local bin bytes, local int width, local int height, local real64 fp
         return output
 
 Reader | error open(string path)
-    bin bytes := try file.read_bin(path)
-    tensor<real64> metadata := tensor.zeros<real64>([5])
-    int32 status := native.probe(bytes, &metadata)
+    bytes := try file.read_bin(path)
+    metadata := tensor.zeros<real64>([5])
+    status := native.probe(bytes, &metadata)
     if status != int32(0)
         return error("video.open failed to read video metadata", code = "VIDEO_DECODE")
-    int width := math.trunc(metadata[0].item())
-    int height := math.trunc(metadata[1].item())
-    real64 fps := metadata[2].item()
-    int frames := math.trunc(metadata[3].item())
-    real64 duration := metadata[4].item()
+    width := math.trunc(metadata[0].item())
+    height := math.trunc(metadata[1].item())
+    fps := metadata[2].item()
+    frames := math.trunc(metadata[3].item())
+    duration := metadata[4].item()
     if width <= 0 or height <= 0
         return error("video.open decoded invalid frame dimensions", code = "VIDEO_SHAPE")
     return Reader(bytes, width, height, fps, frames, duration)
