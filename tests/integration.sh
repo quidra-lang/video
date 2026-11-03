@@ -18,61 +18,42 @@ import qvideo = video
 
 int | error run()
     qvideo.Reader reader = try qvideo.open("$VIDEO")
-    print(reader.width())
-    print(NL)
-    print(reader.height())
-    print(NL)
-    print(reader.position())
-    print(NL)
+    print.line(reader.width())
+    print.line(reader.height())
+    print.line(reader.position())
     tensor<nat8> | none | error first = .reader.read<nat8>()
     match first
         tensor<nat8> pixels
-            print(pixels.shape()[0])
-            print(NL)
-            print(pixels.shape()[1])
-            print(NL)
-            print(pixels.shape()[2])
-            print(NL)
+            print.line(pixels.shape()[0])
+            print.line(pixels.shape()[1])
+            print.line(pixels.shape()[2])
         none
-            print("unexpected-eof")
-            print(NL)
+            print.line("unexpected-eof")
         error problem
-            print(problem)
-            print(NL)
-    print(reader.position())
-    print(NL)
+            print.line(problem)
+    print.line(reader.position())
     try .reader.seek(0)
-    print(reader.position())
-    print(NL)
+    print.line(reader.position())
     tensor<real32> | none | error gray = .reader.read<real32>(channel = 1)
     match gray
         tensor<real32> pixels
-            print(pixels.shape()[0])
-            print(NL)
-            print(pixels.shape()[1])
-            print(NL)
-            print(pixels.shape()[2])
-            print(NL)
+            print.line(pixels.shape()[0])
+            print.line(pixels.shape()[1])
+            print.line(pixels.shape()[2])
         none
-            print("unexpected-eof")
-            print(NL)
+            print.line("unexpected-eof")
         error problem
-            print(problem)
-            print(NL)
+            print.line(problem)
     qvideo.Reader copied = reader
     tensor<nat8> | none | error copied_frame = .copied.read<nat8>()
     match copied_frame
         tensor<nat8>
-            print(copied.position())
-            print(NL)
+            print.line(copied.position())
         none
-            print("unexpected-eof")
-            print(NL)
+            print.line("unexpected-eof")
         error problem
-            print(problem)
-            print(NL)
-    print(reader.position())
-    print(NL)
+            print.line(problem)
+    print.line(reader.position())
     return 0
 
 auto | error result = run()
@@ -80,8 +61,7 @@ match result
     int
         int ignored = result
     error problem
-        print(problem)
-        print(NL)
+        print.line(problem)
 QUI
 
 OUT="$(QUIDRA_PACKAGE_PATH="$PACKAGE_ROOT" "$QUIDRA" run "$TMP/test.qui")"
@@ -126,22 +106,18 @@ int | error run()
     tensor<nat8> | none | error frame = .copied.read<nat8>()
     match frame
         tensor<nat8> pixels
-            print(pixels.shape()[1] == 6 and pixels.shape()[2] == 8)
-            print(NL)
+            print.line(pixels.shape()[1] == 6 and pixels.shape()[2] == 8)
         none
-            print(false)
-            print(NL)
+            print.line(false)
         error
-            print(false)
-            print(NL)
+            print.line(false)
     return 0
 auto | error result = run()
 match result
     int
         int ignored = result
     error problem
-        print(problem)
-        print(NL)
+        print.line(problem)
 QUI
 [[ "$(QUIDRA_PACKAGE_PATH="$PACKAGE_ROOT" "$QUIDRA" run "$TMP/identity.qui")" == "true" ]]
 
@@ -157,7 +133,7 @@ int | error run()
             print(false)
         error problem
             print(problem.code == "VIDEO_ARGUMENT")
-    print(NL)
+    print.line()
     tensor<nat8> | none | error invalid_channels = .reader.read<nat8>(channel = 2)
     match invalid_channels
         tensor<nat8>
@@ -166,14 +142,14 @@ int | error run()
             print(false)
         error problem
             print(problem.code == "VIDEO_ARGUMENT")
-    print(NL)
+    print.line()
     qvideo.Reader | error unreadable = qvideo.open("$TMP/not-a-video.mp4")
     match unreadable
         qvideo.Reader
             print(false)
         error problem
             print(problem.code == "VIDEO_DECODE")
-    print(NL)
+    print.line()
     return 0
 
 auto | error result = run()
@@ -181,8 +157,7 @@ match result
     int
         int ignored = result
     error problem
-        print(problem)
-        print(NL)
+        print.line(problem)
 QUI
 
 printf 'not a video\n' > "$TMP/not-a-video.mp4"
