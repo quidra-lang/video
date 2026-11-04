@@ -44,7 +44,7 @@ class Reader(local bin bytes, local int width, local int height, local real64 fp
         frame_position = frame
         return
 
-    tensor<T> | none | error .read<T: numeric>(int channel := 3)
+    tensor<T> | none | error .read<T: numeric>(channel := 3)
         if channel != 1 and channel != 3 and channel != 4
             return error("video.Reader.read channel must be 1, 3, or 4", code = "VIDEO_ARGUMENT")
         output := tensor.zeros<T>([
