@@ -54,9 +54,9 @@ class Reader(local bin bytes, local int width, local int height, local real64 fp
         status := native.decode<T>(
             source_bytes, int64(frame_position), int64(channel), &output
         )
-        if status == int32(1)
+        if status == 1
             return none
-        if status != int32(0)
+        if status != 0
             return error("video.Reader.read failed to decode the requested frame", code = "VIDEO_DECODE")
         frame_position += 1
         return output
@@ -65,7 +65,7 @@ Reader | error open(string path)
     bytes := try file.read_bin(path)
     metadata := tensor.zeros<real64>([5])
     status := native.probe(bytes, &metadata)
-    if status != int32(0)
+    if status != 0
         return error("video.open failed to read video metadata", code = "VIDEO_DECODE")
     width := math.trunc(metadata[0].item())
     height := math.trunc(metadata[1].item())
